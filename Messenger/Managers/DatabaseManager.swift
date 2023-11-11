@@ -40,6 +40,8 @@ extension DatabaseManager {
             completion(true)
         }
     }
+    
+    
 }
 
 //MARK: - User Struct
