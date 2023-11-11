@@ -7,6 +7,7 @@
 
 import UIKit
 import FirebaseAuth
+import FacebookLogin
 
 class LoginViewController: UIViewController {
     
@@ -70,7 +71,7 @@ class LoginViewController: UIViewController {
         return button
     }()
     
-    
+    private let facebookLoginButton = FBLoginButton()
     
     //MARK: - Lifecycle
     
@@ -80,7 +81,7 @@ class LoginViewController: UIViewController {
         view.backgroundColor = .white
         navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Register", style: .done, target: self, action: #selector(didTapRegister))
         view.addSubviews(scrollView)
-        scrollView.addSubviews(imageView, emailField, passwordField, loginButton)
+        scrollView.addSubviews(imageView, emailField, passwordField, loginButton, facebookLoginButton)
         loginButton.addTarget(self, action: #selector(didTapLoginButton), for: .touchUpInside)
         emailField.delegate = self
         passwordField.delegate = self
@@ -94,6 +95,8 @@ class LoginViewController: UIViewController {
         emailField.frame = CGRect(x: 30, y: imageView.bottom + 50, width: scrollView.width - 60, height: 52)
         passwordField.frame = CGRect(x: 30, y: emailField.bottom + 30, width: scrollView.width - 60, height: 52)
         loginButton.frame = CGRect(x: 30, y: passwordField.bottom + 20, width: scrollView.width - 60, height: 52)
+        facebookLoginButton.frame = CGRect(x: 30, y: loginButton.bottom + 20, width: scrollView.width - 60, height: 52)
+        facebookLoginButton.frame.origin.y = loginButton.bottom + 20
     }
     
     //MARK: - Private
