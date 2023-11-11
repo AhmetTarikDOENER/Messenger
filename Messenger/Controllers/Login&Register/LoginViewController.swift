@@ -115,10 +115,10 @@ class LoginViewController: UIViewController {
         }
         // Firebase Log in
         FirebaseAuth.Auth.auth().signIn(withEmail: email, password: password) {
-            authResult, error in
+            [weak self] authResult, error in
             guard let result = authResult, error == nil else { return }
             let user = result.user
-            print("logged in user \(user)")
+            self?.navigationController?.dismiss(animated: true)
         }
         
     }
