@@ -7,6 +7,7 @@
 
 import UIKit
 import FirebaseAuth
+import JGProgressHUD
 
 class RegisterViewController: UIViewController {
     
@@ -105,7 +106,7 @@ class RegisterViewController: UIViewController {
         return button
     }()
     
-    
+    private let spinner = JGProgressHUD(style: .dark)
     
     //MARK: - Lifecycle
     
@@ -170,9 +171,17 @@ class RegisterViewController: UIViewController {
             alertUserLoginError()
             return
         }
+        
+        spinner.show(in: view)
+        
         // Check first is user already exists.
         DatabaseManager.shared.isUserExist(with: email) {
             [weak self] exists in
+            
+            DispatchQueue.main.async {
+                self?.spinner.dismiss()
+            }
+            
             guard !exists else {
                 // User already exists
                 self?.alertUserLoginError(message: "Looks like a user account for that email address is already exists.!")
