@@ -8,6 +8,7 @@
 import UIKit
 import FirebaseAuth
 import FacebookLogin
+import GoogleSignIn
 
 class LoginViewController: UIViewController {
     
@@ -78,6 +79,14 @@ class LoginViewController: UIViewController {
         return button
     }()
     
+    private let googleLogInButton: GIDSignInButton = {
+        let button = GIDSignInButton()
+        
+        return button
+    }()
+    
+    
+    
     //MARK: - Lifecycle
     
     override func viewDidLoad() {
@@ -86,11 +95,12 @@ class LoginViewController: UIViewController {
         view.backgroundColor = .white
         navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Register", style: .done, target: self, action: #selector(didTapRegister))
         view.addSubviews(scrollView)
-        scrollView.addSubviews(imageView, emailField, passwordField, loginButton, facebookLoginButton)
+        scrollView.addSubviews(imageView, emailField, passwordField, loginButton, facebookLoginButton, googleLogInButton)
         loginButton.addTarget(self, action: #selector(didTapLoginButton), for: .touchUpInside)
         emailField.delegate = self
         passwordField.delegate = self
         facebookLoginButton.delegate = self
+        googleLogInButton.addTarget(self, action: #selector(didTapSignInButton), for: .touchUpInside)
     }
     
     override func viewDidLayoutSubviews() {
@@ -102,10 +112,53 @@ class LoginViewController: UIViewController {
         passwordField.frame = CGRect(x: 30, y: emailField.bottom + 30, width: scrollView.width - 60, height: 52)
         loginButton.frame = CGRect(x: 30, y: passwordField.bottom + 20, width: scrollView.width - 60, height: 52)
         facebookLoginButton.frame = CGRect(x: 30, y: loginButton.bottom + 20, width: scrollView.width - 60, height: 52)
-        facebookLoginButton.frame.origin.y = loginButton.bottom + 20
+        googleLogInButton.frame = CGRect(x: 30, y: facebookLoginButton.bottom + 20, width: scrollView.width - 60, height: 52)
     }
     
     //MARK: - Private
+    
+    @objc func didTapSignInButton() {
+        GIDSignIn.sharedInstance.signIn(withPresenting: self) {
+            result, error in
+            guard result != nil else {
+                if let error = error {
+                    print("Sign In with Google failed: \(error)")
+                }
+                return
+            }
+            guard let user = result?.user,
+                  let idToken = user.idToken?.tokenString else {
+                
+                return
+            }
+            print("Did sign in with Google: \(user)")
+            // Checking mechanism
+            guard let email = user.profile?.email,
+                  let firstName = user.profile?.givenName,
+                  let lastName = user.profile?.familyName else {
+                
+                return
+            }
+            DatabaseManager.shared.isUserExist(with: email) {
+                exists in
+                if !exists {
+                    // insert database
+                    DatabaseManager.shared.insertUser(with: ChatAppUser(firstName: firstName, lastName: lastName, emailAddress: email))
+                }
+            }
+            let credential = GoogleAuthProvider.credential(withIDToken: idToken, accessToken: user.accessToken.tokenString)
+            // Firebase auth with credential
+            Auth.auth().signIn(with: credential) {
+                [weak self] result, error in
+                guard result != nil, error == nil else {
+                    print("Failed to log in with google credential.")
+                    return
+                }
+                print("Succesfully signed in with google credential")
+                self?.navigationController?.dismiss(animated: true)
+            }
+        }
+    }
     
     @objc private func didTapRegister() {
         let vc = RegisterViewController()
@@ -214,7 +267,7 @@ extension LoginViewController: LoginButtonDelegate {
                     return
                 }
                 print("Successfully log in")
-                self?.navigationController?.dismiss(animated: true)
+                self?.dismiss(animated: true)
             }
         }
     }
